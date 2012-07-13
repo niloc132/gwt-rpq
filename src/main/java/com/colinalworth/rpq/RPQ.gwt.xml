@@ -1,0 +1,5 @@
+<module>
+	<generate-with class="com.colinalworth.rpq.rebind.RequestQueueGenerator">
+		<when-type-assignable class="com.colinalworth.rpq.client.RequestQueue" />
+	</generate-with>
+</module>
