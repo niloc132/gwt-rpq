@@ -1,6 +1,8 @@
 package com.colinalworth.rpq.rebind;
 
 import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.colinalworth.rpq.client.RequestQueue;
 import com.colinalworth.rpq.client.RequestQueue.Service;
@@ -15,9 +17,11 @@ import com.google.gwt.core.ext.TreeLogger.Type;
 import com.google.gwt.core.ext.UnableToCompleteException;
 import com.google.gwt.core.ext.typeinfo.JClassType;
 import com.google.gwt.core.ext.typeinfo.JMethod;
+import com.google.gwt.core.ext.typeinfo.JParameter;
+import com.google.gwt.core.ext.typeinfo.JType;
 import com.google.gwt.core.ext.typeinfo.TypeOracle;
+import com.google.gwt.editor.rebind.model.ModelUtils;
 import com.google.gwt.user.client.rpc.AsyncCallback;
-import com.google.gwt.user.client.rpc.RemoteService;
 import com.google.gwt.user.rebind.ClassSourceFileComposerFactory;
 import com.google.gwt.user.rebind.SourceWriter;
 
@@ -76,25 +80,28 @@ public class RequestQueueGenerator extends Generator {
 				StringBuilder argList = new StringBuilder();
 				for (int i = 0; i < method.getArgTypes().size(); i++) {
 					if (i != 0) {
-						sw.print(",");
-						argList.append(",");
+						sw.print(", ");
+						argList.append(", ");
 					}
-					JClassType arg = method.getArgTypes().get(i);
+					JType arg = method.getArgTypes().get(i);
 
 					sw.print("%1$s arg%2$d", arg.getParameterizedQualifiedSourceName(), i);
 					argList.append("arg").append(i);
 				}
 				if (method.hasCallback()) {
-					sw.print("%2$s<%2$s> callback", AsyncCallback.class.getName(), method.getReturnType().getParameterizedQualifiedSourceName());
+					if (method.getArgTypes().size() != 0) {
+						sw.print(", ");
+					}
+					sw.print("%1$s<%2$s> callback", AsyncCallback.class.getName(), method.getReturnType().getParameterizedQualifiedSourceName());
 				}
 				sw.println(") {");
 				sw.indent();
 				
-				sw.println("return addRequest(\"%1$s\", \"%1$s\",", escape(service.getServiceName()), escape(method.getMethodName()));
+				sw.println("addRequest(\"%1$s\", \"%1$s\",", escape(service.getServiceName()), escape(method.getMethodName()));
 				if (method.hasCallback()) {
-					sw.indentln("callback");
+					sw.indentln("callback,");
 				} else {
-					sw.indentln("null");
+					sw.indentln("null,");
 				}
 				sw.indentln("new Object[]{%1$s});", argList.toString());
 				
@@ -119,10 +126,9 @@ public class RequestQueueGenerator extends Generator {
 	private RequestQueueModel collectModel(TreeLogger logger, GeneratorContext context, JClassType toGenerate) throws UnableToCompleteException {
 		RequestQueueModel.Builder rqBuilder = new RequestQueueModel.Builder();
 		JClassType requestQueue = context.getTypeOracle().findType(RequestQueue.class.getName());
+		JClassType asyncCallback = context.getTypeOracle().findType(AsyncCallback.class.getName());
 		rqBuilder.setRequestQueueInterface(requestQueue);
-		
-//		List<JMethod> asyncServices = new ArrayList<JMethod>();
-//		List<JMethod> asyncCalls = new ArrayList<JMethod>();
+
 		AsyncServiceModel.Builder serviceBuilder = new AsyncServiceModel.Builder();
 		for (JMethod m : toGenerate.getMethods()) {
 			// Skip those defined at RequestQueue
@@ -141,12 +147,24 @@ public class RequestQueueGenerator extends Generator {
 			serviceBuilder.setService(m.getAnnotation(Service.class).value().getName());
 			
 			
-//			asyncServices.add(m);
 			AsyncServiceMethodModel.Builder methodBuilder = new AsyncServiceMethodModel.Builder();
 			for (JMethod asyncMethod : m.getReturnType().isClassOrInterface().getMethods()) {
-				methodBuilder.setMethodName(asyncMethod.getName());
-//				asyncMethod.getParameters();
-				methodBuilder.setReturnType(returnType);
+
+				List<JType> types = new ArrayList<JType>();
+				for (JType param : asyncMethod.getParameterTypes()) {
+					if (param.isClassOrInterface() != null && param.isClassOrInterface().isAssignableTo(asyncCallback)) {
+						JClassType boxedReturnType = ModelUtils.findParameterizationOf(asyncCallback, param.isClassOrInterface())[0];
+						methodBuilder
+							.setHasCallback(true)
+							.setReturnType(boxedReturnType);
+						continue;//should be last, check for this...
+					}
+					types.add(param);
+				}
+				methodBuilder
+					.setMethodName(asyncMethod.getName())
+					.setArgTypes(types);
+				
 				serviceBuilder.addMethod(methodBuilder.build());
 //				asyncCalls.add(asyncMethod);
 			}

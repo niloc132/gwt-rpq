@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Set;
 
 import com.google.gwt.core.ext.typeinfo.JClassType;
+import com.google.gwt.core.ext.typeinfo.JType;
 
 public class AsyncServiceMethodModel {
 	public static class Builder {
@@ -17,7 +18,7 @@ public class AsyncServiceMethodModel {
 			model.hasCallback = hasCallback;
 			return this;
 		}
-		public Builder setArgTypes(List<JClassType> argTypes) {
+		public Builder setArgTypes(List<JType> argTypes) {
 			model.argTypes = argTypes;
 			return this;
 		}
@@ -39,7 +40,7 @@ public class AsyncServiceMethodModel {
 
 	private String methodName;
 	private boolean hasCallback;
-	private List<JClassType> argTypes;
+	private List<JType> argTypes;
 	private JClassType returnType;
 	private Set<JClassType> throwables;
 	
@@ -52,7 +53,7 @@ public class AsyncServiceMethodModel {
 	public boolean hasCallback() {
 		return hasCallback;
 	}
-	public List<JClassType> getArgTypes() {
+	public List<JType> getArgTypes() {
 		return argTypes;
 	}
 	public JClassType getReturnType() {
