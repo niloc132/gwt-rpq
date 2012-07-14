@@ -2,4 +2,7 @@
 	<generate-with class="com.colinalworth.rpq.rebind.RequestQueueGenerator">
 		<when-type-assignable class="com.colinalworth.rpq.client.RequestQueue" />
 	</generate-with>
+	
+	<source path="client" />
+	<source path="shared" />
 </module>

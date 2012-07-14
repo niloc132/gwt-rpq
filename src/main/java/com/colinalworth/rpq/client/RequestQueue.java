@@ -1,5 +1,13 @@
 package com.colinalworth.rpq.client;
 
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+import com.google.gwt.user.client.rpc.ServiceDefTarget;
+
 public interface RequestQueue {
 	/**
 	 * Fires all accumulated service calls. Allows multiple requests to be made at once.
@@ -13,6 +21,14 @@ public interface RequestQueue {
 	 */
 	void fire();
 
+	/**
+	 * Wires a service interface to the server implementation
+	 * @author colin
+	 *
+	 */
+	@Documented
+	@Target(ElementType.METHOD)
+	@Retention(RetentionPolicy.RUNTIME)
 	public @interface Service {
 		Class<?> value();
 	}
