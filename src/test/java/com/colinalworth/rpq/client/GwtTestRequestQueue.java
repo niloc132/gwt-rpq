@@ -1,6 +1,7 @@
 package com.colinalworth.rpq.client;
 
-import com.colinalworth.rpq.client.RequestQueue.Service;
+import java.util.Date;
+
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.junit.client.GWTTestCase;
 import com.google.gwt.user.client.rpc.AsyncCallback;
@@ -36,6 +37,12 @@ public class GwtTestRequestQueue extends GWTTestCase {
 	}
 	public interface SampleServiceAsync {
 		void trim(String a, AsyncCallback<String> b);
+		
+		//test other types, colliding methodnames
+		void doSomething(AsyncCallback<Date> param);
+		
+		//test unboxed params, colliding method names, missing callback
+		void doSomething(int i);
 	}
 	public interface SampleRequestQueue extends RequestQueue {
 		@Service(SampleService.class)
@@ -52,6 +59,15 @@ public class GwtTestRequestQueue extends GWTTestCase {
 				fail();
 			}
 		});
+		queue.sample().doSomething(new AsyncCallback<Date>() {
+			public void onSuccess(Date result) {
+				fail();
+			}
+			public void onFailure(Throwable caught) {
+				fail();
+			}
+		});
+		queue.sample().doSomething(2);
 	}
 	
 //	public void testFireNoCalls() {
