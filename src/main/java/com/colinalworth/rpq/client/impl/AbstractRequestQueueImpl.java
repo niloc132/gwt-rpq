@@ -53,7 +53,7 @@ public abstract class AbstractRequestQueueImpl implements RequestQueue {
 					
 					// if exception isn't null, there was an error
 					// can't make this same check on the response, since it could be null or Void
-					if (res.getCaught() == null) {
+					if (res.getCaught() != null) {
 						callback.onFailure(res.getCaught());
 					} else {
 						callback.onSuccess(res.getResponse());
