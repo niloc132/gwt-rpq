@@ -127,7 +127,7 @@ public class RequestQueueGenerator extends Generator {
 		RequestQueueModel.Builder rqBuilder = new RequestQueueModel.Builder();
 		JClassType requestQueue = context.getTypeOracle().findType(RequestQueue.class.getName());
 		JClassType asyncCallback = context.getTypeOracle().findType(AsyncCallback.class.getName());
-		rqBuilder.setRequestQueueInterface(requestQueue);
+		rqBuilder.setRequestQueueInterface(toGenerate);
 
 		AsyncServiceModel.Builder serviceBuilder = new AsyncServiceModel.Builder();
 		for (JMethod m : toGenerate.getMethods()) {

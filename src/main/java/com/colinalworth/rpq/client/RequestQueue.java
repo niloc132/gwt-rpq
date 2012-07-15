@@ -20,6 +20,12 @@ public interface RequestQueue {
 	 *  o  Call this in a runAsync call, moving all RPC code into the same split point
 	 */
 	void fire();
+	
+	/**
+	 * Like {@link ServiceDefTarget#setServiceEntryPoint(String)}
+	 * @param address
+	 */
+	void setServiceEntryPoint(String address);
 
 	/**
 	 * Wires a service interface to the server implementation

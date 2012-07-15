@@ -1,10 +1,12 @@
 package com.colinalworth.rpq.shared.impl;
 
-public class BatchRequest {
-	private String service;
-	private String method;
+import com.google.gwt.user.client.rpc.IsSerializable;
+
+public class BatchRequest implements IsSerializable {
+	private transient String service;
+	private transient String method;
 	
-	private Object[] params;
+	private transient Object[] params;
 
 	public BatchRequest() {
 		// rpc serializable

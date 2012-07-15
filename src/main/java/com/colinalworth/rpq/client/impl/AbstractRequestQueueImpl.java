@@ -7,7 +7,9 @@ import com.colinalworth.rpq.client.RequestQueue;
 import com.colinalworth.rpq.shared.impl.BatchRequest;
 import com.colinalworth.rpq.shared.impl.BatchResponse;
 import com.colinalworth.rpq.shared.impl.ServiceQueueBaseAsync;
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.rpc.AsyncCallback;
+import com.google.gwt.user.client.rpc.ServiceDefTarget;
 
 /**
  * Base impl which will be subclassed by a generated class. 
@@ -18,16 +20,24 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 public abstract class AbstractRequestQueueImpl implements RequestQueue {
 	private List<BatchRequest> requests = new ArrayList<BatchRequest>();
 	private List<AsyncCallback<Object>> callbacks = new ArrayList<AsyncCallback<Object>>();
-
+	
+	private String address = GWT.getModuleBaseURL() + "rpq";
+	
+	public void setServiceEntryPoint(String address) {
+		this.address = address;
+	}
+	
 	public void fire() {
 		if (requests.size() == 0) {
 			return;
 		}
+		
 		ServiceQueueBaseAsync service = getRealService();
+		((ServiceDefTarget)service).setServiceEntryPoint(address);
 		
 		// Save a local copy to close over, and reset the old for the next round
-		final List<BatchRequest> activeRequests = requests;
-		final List<AsyncCallback<Object>> activeCallbacks = callbacks;
+		final List<BatchRequest> activeRequests = new ArrayList<BatchRequest>(requests);
+		final List<AsyncCallback<Object>> activeCallbacks = new ArrayList<AsyncCallback<Object>>(callbacks);
 		assert activeCallbacks.size() == activeRequests.size();
 		reset();
 		

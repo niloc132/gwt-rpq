@@ -1,8 +1,10 @@
 package com.colinalworth.rpq.shared.impl;
 
-public class BatchResponse {
-	private Object response;
-	private Throwable caught;
+import com.google.gwt.user.client.rpc.IsSerializable;
+
+public class BatchResponse implements IsSerializable {
+	private transient Object response;
+	private transient Throwable caught;
 	
 	public BatchResponse() {
 		//rpc-able

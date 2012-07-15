@@ -10,7 +10,7 @@ public class GwtTestRequestQueue extends GWTTestCase {
 
 	@Override
 	public String getModuleName() {
-		return "com.colinalworth.rpq.RPQ";
+		return "com.colinalworth.rpq.RPQTest";
 	}
 	
 
@@ -70,12 +70,27 @@ public class GwtTestRequestQueue extends GWTTestCase {
 		queue.sample().doSomething(2);
 	}
 	
-//	public void testFireNoCalls() {
-//		
-//	}
+	public void testFireNoCalls() {
+		//nothing should happen
+		SampleRequestQueue queue = GWT.create(SampleRequestQueue.class);
+		queue.fire();
+	}
 	
-//	public void testFireCalls() {
-//		
-//	}
+	public void testFireCalls() {
+		SampleRequestQueue queue = GWT.create(SampleRequestQueue.class);
+		queue.sample().trim("  asdf  ", new AsyncCallback<String>() {
+			public void onSuccess(String result) {
+				assertEquals("asdf", result);
+				finishTest();
+			}
+			
+			public void onFailure(Throwable caught) {
+				GWT.log("fail", caught);
+				fail(caught.getMessage());
+			}
+		});
+		queue.fire();
+		delayTestFinish(1000);
+	}
 
 }
