@@ -97,7 +97,7 @@ public class RequestQueueGenerator extends Generator {
 				sw.println(") {");
 				sw.indent();
 				
-				sw.println("addRequest(\"%1$s\", \"%1$s\",", escape(service.getServiceName()), escape(method.getMethodName()));
+				sw.println("addRequest(\"%1$s\", \"%2$s\",", escape(service.getServiceName()), escape(method.getMethodName()));
 				if (method.hasCallback()) {
 					sw.indentln("callback,");
 				} else {
