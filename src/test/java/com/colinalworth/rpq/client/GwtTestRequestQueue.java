@@ -2,6 +2,7 @@ package com.colinalworth.rpq.client;
 
 import java.util.Date;
 
+import com.colinalworth.rpq.client.AsyncService.Throws;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.junit.client.GWTTestCase;
 import com.google.gwt.user.client.rpc.AsyncCallback;
@@ -36,13 +37,14 @@ public class GwtTestRequestQueue extends GWTTestCase {
 			return str.trim();
 		}
 		public void doSomething() {
-			throw new RpcTokenException("Only exception we can throw so far...");
+			throw new RuntimeException("something");
 		}
 	}
 	public interface SampleServiceAsync {
 		void trim(String a, AsyncCallback<String> b);
 
-		//test other types, colliding methodnames
+		//test other types, colliding methodnames, exceptions
+		@Throws({RuntimeException.class})
 		void doSomething(AsyncCallback<Date> param);
 
 		//test unboxed params, colliding method names, missing callback
@@ -104,6 +106,8 @@ public class GwtTestRequestQueue extends GWTTestCase {
 			}
 			public void onFailure(Throwable caught) {
 				assertNotNull(caught);
+				assertTrue(caught instanceof RuntimeException);
+				assertEquals("something", caught.getMessage());
 				finishTest();
 			}
 		});

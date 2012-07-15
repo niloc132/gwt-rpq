@@ -2,8 +2,11 @@ package com.colinalworth.rpq.rebind;
 
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
+import com.colinalworth.rpq.client.AsyncService.Throws;
 import com.colinalworth.rpq.client.RequestQueue;
 import com.colinalworth.rpq.client.RequestQueue.Service;
 import com.colinalworth.rpq.client.impl.AbstractRequestQueueImpl;
@@ -17,7 +20,6 @@ import com.google.gwt.core.ext.TreeLogger.Type;
 import com.google.gwt.core.ext.UnableToCompleteException;
 import com.google.gwt.core.ext.typeinfo.JClassType;
 import com.google.gwt.core.ext.typeinfo.JMethod;
-import com.google.gwt.core.ext.typeinfo.JParameter;
 import com.google.gwt.core.ext.typeinfo.JType;
 import com.google.gwt.core.ext.typeinfo.TypeOracle;
 import com.google.gwt.editor.rebind.model.ModelUtils;
@@ -29,7 +31,6 @@ public class RequestQueueGenerator extends Generator {
 
 	@Override
 	public String generate(TreeLogger logger, GeneratorContext context, String typeName) throws UnableToCompleteException {
-
 		TypeOracle oracle = context.getTypeOracle();
 
 		JClassType requestQueue = oracle.findType(RequestQueue.class.getName());
@@ -151,6 +152,7 @@ public class RequestQueueGenerator extends Generator {
 			for (JMethod asyncMethod : m.getReturnType().isClassOrInterface().getMethods()) {
 
 				List<JType> types = new ArrayList<JType>();
+				methodBuilder.setReturnType(context.getTypeOracle().findType("java.lang.Void"));
 				for (JType param : asyncMethod.getParameterTypes()) {
 					if (param.isClassOrInterface() != null && param.isClassOrInterface().isAssignableTo(asyncCallback)) {
 						JClassType boxedReturnType = ModelUtils.findParameterizationOf(asyncCallback, param.isClassOrInterface())[0];
@@ -161,12 +163,20 @@ public class RequestQueueGenerator extends Generator {
 					}
 					types.add(param);
 				}
+				Set<JClassType> throwables = new HashSet<JClassType>();
+				Throws t = asyncMethod.getAnnotation(Throws.class);
+				if (t != null) {
+					for (Class<? extends Throwable> throwable : t.value()) {
+						throwables.add(context.getTypeOracle().findType(throwable.getName()));
+					}
+				}
+				
 				methodBuilder
 					.setMethodName(asyncMethod.getName())
-					.setArgTypes(types);
+					.setArgTypes(types)
+					.setThrowables(throwables);
 				
 				serviceBuilder.addMethod(methodBuilder.build());
-//				asyncCalls.add(asyncMethod);
 			}
 			rqBuilder.addService(serviceBuilder.build());
 		}
@@ -184,21 +194,66 @@ public class RequestQueueGenerator extends Generator {
 			return packageName + "." + serviceSourceName;
 		}
 
+		// Create async class
 		ClassSourceFileComposerFactory factory = new ClassSourceFileComposerFactory(packageName, asyncSourceName);
 		factory.addImplementedInterface(ServiceQueueBaseAsync.class.getName());
 		factory.makeInterface();
-		SourceWriter sw = factory.createSourceWriter(context, pw);
-		//write out service
-		sw.commit(logger);
-		
+		SourceWriter asyncSw = factory.createSourceWriter(context, pw);
+
+		// Create service class
 		pw = context.tryCreate(logger, packageName, serviceSourceName);
 		assert pw != null;
 		factory = new ClassSourceFileComposerFactory(packageName, serviceSourceName);
 		factory.addImplementedInterface(ServiceQueueBase.class.getName());
 		factory.makeInterface();
-		sw = factory.createSourceWriter(context, pw);
-		//write out async
-		sw.commit(logger);
+		SourceWriter serviceSw = factory.createSourceWriter(context, pw);
+
+		//write out service and async
+		int i = 0;
+		for (AsyncServiceModel service : model.getServices()) {
+			for (AsyncServiceMethodModel method : service.getMethods()) {
+				String methodName = "a" + ++i;
+				asyncSw.println("void %1$s(", methodName);
+				serviceSw.println("%2$s %1$s(", methodName, method.getReturnType().getParameterizedQualifiedSourceName());
+				asyncSw.indent();
+				serviceSw.indent();
+				
+				boolean firstArgument = true;
+				int argIndex = 0;
+				for (JType arg : method.getArgTypes()) {
+					if (!firstArgument) {
+						asyncSw.println(",");
+						serviceSw.println(",");
+					}
+					firstArgument = false;
+					asyncSw.println("%2$s arg%1$d", argIndex, arg.getQualifiedSourceName());
+					serviceSw.println("%2$s arg%1$d", argIndex, arg.getQualifiedSourceName());
+					argIndex++;
+				}
+				if (!firstArgument) {
+					asyncSw.print(", ");
+				}
+				asyncSw.println("%1$s<%2$s>callback);", AsyncCallback.class.getName(), method.getReturnType().getParameterizedQualifiedSourceName());
+				serviceSw.print(")");
+				if (!method.getThrowables().isEmpty()) {
+					serviceSw.print(" throws ");
+					boolean firstThrowable = true;
+					for (JClassType throwable : method.getThrowables()) {
+						if (!firstThrowable) {
+							serviceSw.print(", ");
+						}
+						firstThrowable = false;
+						serviceSw.print(throwable.getQualifiedSourceName());
+					}
+				}
+				serviceSw.println(";");
+				asyncSw.outdent();
+				serviceSw.outdent();
+			}
+		}
+		
+		asyncSw.commit(logger);
+		serviceSw.commit(logger);
 		
 		return factory.getCreatedClassName();
 	}
