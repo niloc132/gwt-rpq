@@ -1,4 +1,12 @@
+# Maven binaries
 target
+
+# Eclipse garbage
 .project
 .classpath
 .settings
+
+# GWT/Eclipse litter
+gwt-unitCache
+war
+www-test
