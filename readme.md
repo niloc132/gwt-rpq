@@ -9,7 +9,7 @@ The purpose of this project is to provide an automated mechanism for batching mu
  *  Uses RPC serialization, slower than JSON
  *  Extra boilerplate like RF, with interfaces that only loosely map to their services
 
-#### Advangates?
+#### Advantages?
 
  *  Easy split points for all RPC related code (proxy, serializers)
  *  Same DTO on both client and server (no need for RF proxies)
