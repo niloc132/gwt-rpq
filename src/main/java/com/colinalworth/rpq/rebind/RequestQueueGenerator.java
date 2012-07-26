@@ -33,7 +33,7 @@ public class RequestQueueGenerator extends Generator {
 	public String generate(TreeLogger logger, GeneratorContext context, String typeName) throws UnableToCompleteException {
 		TypeOracle oracle = context.getTypeOracle();
 
-		JClassType requestQueue = oracle.findType(RequestQueue.class.getName());
+		//JClassType requestQueue = oracle.findType(RequestQueue.class.getName());
 		JClassType toGenerate = oracle.findType(typeName);
 
 		if (toGenerate == null) {
@@ -42,7 +42,7 @@ public class RequestQueueGenerator extends Generator {
 		}
 
 		String packageName = toGenerate.getPackage().getName();
-		String simpleSourceName = toGenerate.getName().replace('.', '_') + "Impl";
+		String simpleSourceName = toGenerate.getName().replace('.', '_') + "_Impl";
 		PrintWriter pw = context.tryCreate(logger, packageName, simpleSourceName);
 		if (pw == null) {
 			return packageName + "." + simpleSourceName;
@@ -187,7 +187,7 @@ public class RequestQueueGenerator extends Generator {
 	private String buildRpcInterfaces(TreeLogger logger, GeneratorContext context, RequestQueueModel model) {
 		JClassType rqType = model.getRequestQueueInterface();
 		String packageName = rqType.getPackage().getName();
-		String serviceSourceName = rqType.getName().replace('.', '_') + "ImplRPC";
+		String serviceSourceName = rqType.getName().replace('.', '_') + "_ImplRPC";
 		String asyncSourceName = serviceSourceName + "Async";
 		PrintWriter pw = context.tryCreate(logger, packageName, asyncSourceName);
 		if (pw == null) {
