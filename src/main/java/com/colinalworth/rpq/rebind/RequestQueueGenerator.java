@@ -54,11 +54,11 @@ public class RequestQueueGenerator extends Generator {
 		SourceWriter sw = factory.createSourceWriter(context, pw);
 
 		// Collect async services we need to provide access to, and the rpc calls they'll make
-		RequestQueueModel model = collectModel(logger, context, toGenerate);
+		RequestQueueModel model = collectModel(logger.branch(Type.DEBUG, "Collecting service info"), context, toGenerate);
 
 
 		// Build a pair of RPC interfaces for serialization
-		String realRpcInterfaceName = buildRpcInterfaces(logger, context, model);
+		String realRpcInterfaceName = buildRpcInterfaces(logger.branch(Type.DEBUG, "Writing RPC interfaces"), context, model);
 
 
 		// Build the getRealService() method
@@ -126,39 +126,55 @@ public class RequestQueueGenerator extends Generator {
 
 	private RequestQueueModel collectModel(TreeLogger logger, GeneratorContext context, JClassType toGenerate) throws UnableToCompleteException {
 		RequestQueueModel.Builder rqBuilder = new RequestQueueModel.Builder();
-		JClassType requestQueue = context.getTypeOracle().findType(RequestQueue.class.getName());
-		JClassType asyncCallback = context.getTypeOracle().findType(AsyncCallback.class.getName());
+		
+		TypeOracle typeOracle = context.getTypeOracle();
+		JClassType requestQueue = typeOracle.findType(RequestQueue.class.getName());
+		JClassType asyncCallback = typeOracle.findType(AsyncCallback.class.getName());
+		JClassType voidType = typeOracle.findType(Void.class.getName());
 		rqBuilder.setRequestQueueInterface(toGenerate);
 
 		AsyncServiceModel.Builder serviceBuilder = new AsyncServiceModel.Builder();
 		for (JMethod m : toGenerate.getMethods()) {
+			TreeLogger serviceLogger = logger.branch(Type.DEBUG, "Reading async service " + m.getReadableDeclaration());
+			
 			// Skip those defined at RequestQueue
 			if (m.getEnclosingType().equals(requestQueue)) {
 				continue;
 			}
 			JClassType returnType = m.getReturnType().isClassOrInterface();
 			if (returnType == null) {
-				logger.log(Type.ERROR, "Unexpected method return type " + returnType);
+				serviceLogger.log(Type.ERROR, "Unexpected method return type " + returnType);
 				throw new UnableToCompleteException();
 			}
 
-			//TODO log errors on this next line, no help without this
 			serviceBuilder.setAsyncServiceInterface(returnType);
 			serviceBuilder.setDeclaredMethodName(m.getName());
-			serviceBuilder.setService(m.getAnnotation(Service.class).value().getName());
+
+			Service serviceAnnotation = m.getAnnotation(Service.class);
+			if (serviceAnnotation == null) {
+				serviceLogger.log(Type.ERROR, "Missing @Service annotation");
+				throw new UnableToCompleteException();
+			}
+			serviceBuilder.setService(serviceAnnotation.value().getName());
 			
 			
 			AsyncServiceMethodModel.Builder methodBuilder = new AsyncServiceMethodModel.Builder();
 			for (JMethod asyncMethod : m.getReturnType().isClassOrInterface().getMethods()) {
+				TreeLogger methodLogger = serviceLogger.branch(Type.DEBUG, "Reading service method " + asyncMethod.getReadableDeclaration());
 
 				List<JType> types = new ArrayList<JType>();
-				methodBuilder.setReturnType(context.getTypeOracle().findType("java.lang.Void"));
+				methodBuilder.setReturnType(voidType);
+				boolean asyncFound = false;
 				for (JType param : asyncMethod.getParameterTypes()) {
+					if (asyncFound) {
+						methodLogger.log(Type.WARN, "Already passed an AsyncCallback param - is that what you meant?");
+					}
 					if (param.isClassOrInterface() != null && param.isClassOrInterface().isAssignableTo(asyncCallback)) {
 						JClassType boxedReturnType = ModelUtils.findParameterizationOf(asyncCallback, param.isClassOrInterface())[0];
 						methodBuilder
 							.setHasCallback(true)
 							.setReturnType(boxedReturnType);
+						asyncFound = true;
 						continue;//should be last, check for this...
 					}
 					types.add(param);
@@ -167,7 +183,7 @@ public class RequestQueueGenerator extends Generator {
 				Throws t = asyncMethod.getAnnotation(Throws.class);
 				if (t != null) {
 					for (Class<? extends Throwable> throwable : t.value()) {
-						throwables.add(context.getTypeOracle().findType(throwable.getName()));
+						throwables.add(typeOracle.findType(throwable.getName()));
 					}
 				}
 				
