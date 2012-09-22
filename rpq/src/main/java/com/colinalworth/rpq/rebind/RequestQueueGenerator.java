@@ -20,6 +20,7 @@ import com.google.gwt.core.ext.TreeLogger.Type;
 import com.google.gwt.core.ext.UnableToCompleteException;
 import com.google.gwt.core.ext.typeinfo.JClassType;
 import com.google.gwt.core.ext.typeinfo.JMethod;
+import com.google.gwt.core.ext.typeinfo.JPrimitiveType;
 import com.google.gwt.core.ext.typeinfo.JType;
 import com.google.gwt.core.ext.typeinfo.TypeOracle;
 import com.google.gwt.editor.rebind.model.ModelUtils;
@@ -70,10 +71,10 @@ public class RequestQueueGenerator extends Generator {
 
 		// Build the methods (and maybe types?) that call addRequest()
 		for (AsyncServiceModel service : model.getServices()) {
-			sw.println("public %1$s %2$s() {", service.getAsyncServiceInterface().getParameterizedQualifiedSourceName(), service.getDeclaredMethodName());
+			sw.println("public %1$s %2$s() {", service.getAsyncServiceInterfaceName(), service.getDeclaredMethodName());
 			sw.indent();
 			
-			sw.println("return new %1$s() {", service.getAsyncServiceInterface().getParameterizedQualifiedSourceName());
+			sw.println("return new %1$s() {", service.getAsyncServiceInterfaceName());
 			sw.indent();
 			
 			for (AsyncServiceMethodModel method : service.getMethods()) {
@@ -131,7 +132,7 @@ public class RequestQueueGenerator extends Generator {
 		JClassType requestQueue = typeOracle.findType(RequestQueue.class.getName());
 		JClassType asyncCallback = typeOracle.findType(AsyncCallback.class.getName());
 		JClassType voidType = typeOracle.findType(Void.class.getName());
-		rqBuilder.setRequestQueueInterface(toGenerate);
+		rqBuilder.setRequestQueueInterfaceName(toGenerate.getParameterizedQualifiedSourceName());
 
 		AsyncServiceModel.Builder serviceBuilder = new AsyncServiceModel.Builder();
 		for (JMethod m : toGenerate.getMethods()) {
@@ -147,7 +148,7 @@ public class RequestQueueGenerator extends Generator {
 				throw new UnableToCompleteException();
 			}
 
-			serviceBuilder.setAsyncServiceInterface(returnType);
+			serviceBuilder.setAsyncServiceInterfaceName(returnType.getParameterizedQualifiedSourceName());
 			serviceBuilder.setDeclaredMethodName(m.getName());
 
 			Service serviceAnnotation = m.getAnnotation(Service.class);
@@ -201,9 +202,10 @@ public class RequestQueueGenerator extends Generator {
 	}
 
 	private String buildRpcInterfaces(TreeLogger logger, GeneratorContext context, RequestQueueModel model) {
-		JClassType rqType = model.getRequestQueueInterface();
-		String packageName = rqType.getPackage().getName();
-		String serviceSourceName = rqType.getName().replace('.', '_') + "_ImplRPC";
+		String rqType = model.getRequestQueueInterfaceName();
+		int lastDot = rqType.lastIndexOf('.');
+		String packageName = rqType.substring(0, lastDot - 1);
+		String serviceSourceName = rqType.substring(lastDot).replace('.', '_') + "_ImplRPC";
 		String asyncSourceName = serviceSourceName + "Async";
 		PrintWriter pw = context.tryCreate(logger, packageName, asyncSourceName);
 		if (pw == null) {
@@ -242,8 +244,16 @@ public class RequestQueueGenerator extends Generator {
 						serviceSw.println(",");
 					}
 					firstArgument = false;
-					asyncSw.println("%2$s arg%1$d", argIndex, arg.getQualifiedSourceName());
-					serviceSw.println("%2$s arg%1$d", argIndex, arg.getQualifiedSourceName());
+					
+					if (arg.isPrimitive() != null) {
+						JPrimitiveType t = arg.isPrimitive();
+						asyncSw.println("%2$s arg%1$d", argIndex, t.getQualifiedBoxedSourceName());
+						serviceSw.println("%2$s arg%1$d", argIndex, t.getQualifiedBoxedSourceName());
+					} else {
+						asyncSw.println("%2$s arg%1$d", argIndex, arg.getQualifiedSourceName());
+						serviceSw.println("%2$s arg%1$d", argIndex, arg.getQualifiedSourceName());
+					}
+					
 					argIndex++;
 				}
 				if (!firstArgument) {

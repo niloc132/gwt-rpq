@@ -1,11 +1,12 @@
 package com.colinalworth.rpq.rebind;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.google.gwt.core.ext.typeinfo.JClassType;
+public class RequestQueueModel implements Serializable {
+	private static final long serialVersionUID = 1L;
 
-public class RequestQueueModel {
 	public static class Builder {
 		private RequestQueueModel model = new RequestQueueModel();
 		public Builder setPath(String path) {
@@ -20,8 +21,8 @@ public class RequestQueueModel {
 			model.services.add(build);
 			return this;
 		}
-		public Builder setRequestQueueInterface(JClassType requestQueueInterface) {
-			model.requestQueueInterface = requestQueueInterface;
+		public Builder setRequestQueueInterfaceName(String requestQueueInterfaceName) {
+			model.requestQueueInterfaceName = requestQueueInterfaceName;
 			return this;
 		}
 
@@ -34,7 +35,7 @@ public class RequestQueueModel {
 
 	private String path;
 	private List<AsyncServiceModel> services = new ArrayList<AsyncServiceModel>();
-	private JClassType requestQueueInterface;
+	private String requestQueueInterfaceName;
 
 	private RequestQueueModel() {
 
@@ -45,7 +46,7 @@ public class RequestQueueModel {
 	public List<AsyncServiceModel> getServices() {
 		return services;
 	}
-	public JClassType getRequestQueueInterface() {
-		return requestQueueInterface;
+	public String getRequestQueueInterfaceName() {
+		return requestQueueInterfaceName;
 	}
 }

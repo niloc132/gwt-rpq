@@ -1,11 +1,12 @@
 package com.colinalworth.rpq.rebind;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.google.gwt.core.ext.typeinfo.JClassType;
+public class AsyncServiceModel implements Serializable {
+	private static final long serialVersionUID = 1L;
 
-public class AsyncServiceModel {
 	public static class Builder {
 		private AsyncServiceModel model = new AsyncServiceModel();
 		public Builder setService(String service) {
@@ -20,15 +21,15 @@ public class AsyncServiceModel {
 			model.methods.add(method);
 			return this;
 		}
-		public Builder setAsyncServiceInterface(JClassType asyncServiceInterface) {
-			model.asyncServiceInterface = asyncServiceInterface;
+		public Builder setAsyncServiceInterfaceName(String asyncServiceInterfaceName) {
+			model.asyncServiceInterfaceName = asyncServiceInterfaceName;
 			return this;
 		}
 		public Builder setDeclaredMethodName(String declaredMethodName) {
 			model.declaredMethodName = declaredMethodName;
 			return this;
 		}
-		
+
 		public AsyncServiceModel build() {
 			AsyncServiceModel model = this.model;
 			this.model = new AsyncServiceModel();
@@ -38,9 +39,9 @@ public class AsyncServiceModel {
 
 	private String service;
 	private List<AsyncServiceMethodModel> methods = new ArrayList<AsyncServiceMethodModel>();
-	private JClassType asyncServiceInterface;
+	private String asyncServiceInterfaceName;
 	private String declaredMethodName;
-	
+
 	private AsyncServiceModel() {
 
 	}
@@ -50,10 +51,10 @@ public class AsyncServiceModel {
 	public List<AsyncServiceMethodModel> getMethods() {
 		return methods;
 	}
-	public JClassType getAsyncServiceInterface() {
-		return asyncServiceInterface;
+	public String getAsyncServiceInterfaceName() {
+		return asyncServiceInterfaceName;
 	}
-	public Object getDeclaredMethodName() {
+	public String getDeclaredMethodName() {
 		return declaredMethodName;
 	}
 }

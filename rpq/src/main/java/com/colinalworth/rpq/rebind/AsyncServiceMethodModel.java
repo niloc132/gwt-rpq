@@ -1,12 +1,15 @@
 package com.colinalworth.rpq.rebind;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.Set;
 
 import com.google.gwt.core.ext.typeinfo.JClassType;
 import com.google.gwt.core.ext.typeinfo.JType;
 
-public class AsyncServiceMethodModel {
+public class AsyncServiceMethodModel implements Serializable {
+	private static final long serialVersionUID = 1L;
+
 	public static class Builder {
 		private AsyncServiceMethodModel model = new AsyncServiceMethodModel();
 
@@ -43,7 +46,7 @@ public class AsyncServiceMethodModel {
 	private List<JType> argTypes;
 	private JClassType returnType;
 	private Set<JClassType> throwables;
-	
+
 	private AsyncServiceMethodModel() {
 
 	}
