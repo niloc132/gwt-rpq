@@ -25,8 +25,8 @@ public class AsyncServiceMethodModel implements Serializable {
 			model.argTypes = argTypes;
 			return this;
 		}
-		public Builder setReturnType(JClassType returnType) {
-			model.returnType = returnType;
+		public Builder setReturnTypeName(String returnTypeName) {
+			model.returnTypeName = returnTypeName;
 			return this;
 		}
 		public Builder setThrowables(Set<JClassType> throwables) {
@@ -44,7 +44,7 @@ public class AsyncServiceMethodModel implements Serializable {
 	private String methodName;
 	private boolean hasCallback;
 	private List<JType> argTypes;
-	private JClassType returnType;
+	private String returnTypeName;
 	private Set<JClassType> throwables;
 
 	private AsyncServiceMethodModel() {
@@ -59,8 +59,8 @@ public class AsyncServiceMethodModel implements Serializable {
 	public List<JType> getArgTypes() {
 		return argTypes;
 	}
-	public JClassType getReturnType() {
-		return returnType;
+	public String getReturnTypeName() {
+		return returnTypeName;
 	}
 	public Set<JClassType> getThrowables() {
 		return throwables;

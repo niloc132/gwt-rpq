@@ -94,7 +94,7 @@ public class RequestQueueGenerator extends Generator {
 					if (method.getArgTypes().size() != 0) {
 						sw.print(", ");
 					}
-					sw.print("%1$s<%2$s> callback", AsyncCallback.class.getName(), method.getReturnType().getParameterizedQualifiedSourceName());
+					sw.print("%1$s<%2$s> callback", AsyncCallback.class.getName(), method.getReturnTypeName());
 				}
 				sw.println(") {");
 				sw.indent();
@@ -164,7 +164,7 @@ public class RequestQueueGenerator extends Generator {
 				TreeLogger methodLogger = serviceLogger.branch(Type.DEBUG, "Reading service method " + asyncMethod.getReadableDeclaration());
 
 				List<JType> types = new ArrayList<JType>();
-				methodBuilder.setReturnType(voidType);
+				methodBuilder.setReturnTypeName(voidType.getParameterizedQualifiedSourceName());
 				boolean asyncFound = false;
 				for (JType param : asyncMethod.getParameterTypes()) {
 					if (asyncFound) {
@@ -174,7 +174,7 @@ public class RequestQueueGenerator extends Generator {
 						JClassType boxedReturnType = ModelUtils.findParameterizationOf(asyncCallback, param.isClassOrInterface())[0];
 						methodBuilder
 							.setHasCallback(true)
-							.setReturnType(boxedReturnType);
+							.setReturnTypeName(boxedReturnType.getParameterizedQualifiedSourceName());
 						asyncFound = true;
 						continue;//should be last, check for this...
 					}
@@ -232,7 +232,7 @@ public class RequestQueueGenerator extends Generator {
 			for (AsyncServiceMethodModel method : service.getMethods()) {
 				String methodName = "a" + ++i;
 				asyncSw.println("void %1$s(", methodName);
-				serviceSw.println("%2$s %1$s(", methodName, method.getReturnType().getParameterizedQualifiedSourceName());
+				serviceSw.println("%2$s %1$s(", methodName, method.getReturnTypeName());
 				asyncSw.indent();
 				serviceSw.indent();
 				
@@ -250,8 +250,8 @@ public class RequestQueueGenerator extends Generator {
 						asyncSw.println("%2$s arg%1$d", argIndex, t.getQualifiedBoxedSourceName());
 						serviceSw.println("%2$s arg%1$d", argIndex, t.getQualifiedBoxedSourceName());
 					} else {
-						asyncSw.println("%2$s arg%1$d", argIndex, arg.getQualifiedSourceName());
-						serviceSw.println("%2$s arg%1$d", argIndex, arg.getQualifiedSourceName());
+						asyncSw.println("%2$s arg%1$d", argIndex, arg.getParameterizedQualifiedSourceName());
+						serviceSw.println("%2$s arg%1$d", argIndex, arg.getParameterizedQualifiedSourceName());
 					}
 					
 					argIndex++;
@@ -259,7 +259,8 @@ public class RequestQueueGenerator extends Generator {
 				if (!firstArgument) {
 					asyncSw.print(", ");
 				}
-				asyncSw.println("%1$s<%2$s>callback);", AsyncCallback.class.getName(), method.getReturnType().getParameterizedQualifiedSourceName());
+				//TODO return type boxing
+				asyncSw.println("%1$s<%2$s>callback);", AsyncCallback.class.getName(), method.getReturnTypeName());
 				serviceSw.print(")");
 				if (!method.getThrowables().isEmpty()) {
 					serviceSw.print(" throws ");
