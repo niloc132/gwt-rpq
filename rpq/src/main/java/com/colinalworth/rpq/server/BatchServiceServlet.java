@@ -29,8 +29,18 @@ import com.google.gwt.user.server.rpc.impl.SerializabilityUtil;
 import com.google.gwt.user.server.rpc.impl.ServerSerializationStreamReader;
 import com.google.gwt.user.server.rpc.impl.TypeNameObfuscator;
 
-//TODO lie to RPC and tell it that we implement any interface
 public class BatchServiceServlet extends RemoteServiceServlet implements ServiceQueueBase {
+
+	private final BatchServiceLocator locator;
+
+	public BatchServiceServlet() {
+		this(new BatchServiceLocator());
+	}
+
+	public BatchServiceServlet(BatchServiceLocator batchServiceLocator) {
+		this.locator = batchServiceLocator;
+	}
+
 
 	public List<BatchResponse> batchedRequest(List<BatchRequest> requests) {
 		List<BatchResponse> responses = new ArrayList<BatchResponse>();
@@ -53,32 +63,32 @@ public class BatchServiceServlet extends RemoteServiceServlet implements Service
 		return responses;
 	}
 
-	private Object invoke(BatchRequest req) throws Exception, InvocationTargetException {
-		// really quick impl, we want some kind of locator for this stuff
+	private Object invoke(BatchRequest req) throws ReflectiveOperationException {
 		Class<?> clazz = getServiceType(req);
 
 		Method m = getServiceMethod(req, clazz);
 
 		Object serviceInstance = getServiceInstance(clazz);
 
-		return m.invoke(serviceInstance, req.getParams());
+		return invoke(req, m, serviceInstance);
 	}
 
 
-	private Class<?> getServiceType(BatchRequest req) throws ClassNotFoundException {
-		return Class.forName(req.getService());
+	private Object invoke(BatchRequest req, Method m, Object serviceInstance) throws InvocationTargetException {
+		return locator.invoke(req, m, serviceInstance);
 	}
 
-	private Method getServiceMethod(BatchRequest req, Class<?> serviceType) throws NoSuchMethodException, SecurityException {
-		Class<?>[] types = new Class<?>[req.getParams().length];
-		for (int i = 0; i < types.length; i++) {
-			types[i] = req.getParams()[i].getClass();
-		}
-		return serviceType.getMethod(req.getMethod(), types);
+
+	private Class<?> getServiceType(BatchRequest req) {
+		return locator.getServiceType(req);
 	}
 
-	private Object getServiceInstance(Class<?> clazz) throws InstantiationException, IllegalAccessException {
-		return clazz.newInstance();
+	private Method getServiceMethod(BatchRequest req, Class<?> serviceType) {
+		return locator.getServiceMethod(req, serviceType);
+	}
+
+	private Object getServiceInstance(Class<?> clazz) {
+		return locator.getServiceInstance(clazz);
 	}
 
 
