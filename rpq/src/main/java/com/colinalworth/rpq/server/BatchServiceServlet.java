@@ -1,18 +1,13 @@
 package com.colinalworth.rpq.server;
 
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.colinalworth.rpq.shared.impl.BatchRequest;
-import com.colinalworth.rpq.shared.impl.BatchResponse;
 import com.colinalworth.rpq.shared.impl.ServiceQueueBase;
 import com.google.gwt.user.client.rpc.IncompatibleRemoteServiceException;
 import com.google.gwt.user.client.rpc.RpcToken;
@@ -29,69 +24,19 @@ import com.google.gwt.user.server.rpc.impl.SerializabilityUtil;
 import com.google.gwt.user.server.rpc.impl.ServerSerializationStreamReader;
 import com.google.gwt.user.server.rpc.impl.TypeNameObfuscator;
 
-public class BatchServiceServlet extends RemoteServiceServlet implements ServiceQueueBase {
-
-	private final BatchServiceLocator locator;
-
+public class BatchServiceServlet extends RemoteServiceServlet {
+	private Object delegate;
 	public BatchServiceServlet() {
 		this(new BatchServiceLocator());
 	}
-
 	public BatchServiceServlet(BatchServiceLocator batchServiceLocator) {
-		this.locator = batchServiceLocator;
+		this(new BatchInvoker(batchServiceLocator));
 	}
 
-
-	public List<BatchResponse> batchedRequest(List<BatchRequest> requests) {
-		List<BatchResponse> responses = new ArrayList<BatchResponse>();
-		for (BatchRequest req : requests) {
-			BatchResponse resp = new BatchResponse();
-			responses.add(resp);
-			try {
-				resp.setResponse(invoke(req));
-			} catch (InvocationTargetException ex) {
-				// exceptions from within the service call
-
-				// I'm a little concerned about sending undeclared runtime exceptions here and
-				// poisoning all other responses
-				resp.setCaught(ex.getTargetException());
-			} catch (Exception ex) {
-				// All other errors, wrap them, since they might not make it over the wire
-				resp.setCaught(new Exception(ex.getMessage()));
-			}
-		}
-		return responses;
+	public BatchServiceServlet(BatchInvoker delegate) {
+		super(delegate);
+		this.delegate = delegate;
 	}
-
-	private Object invoke(BatchRequest req) throws ReflectiveOperationException {
-		Class<?> clazz = getServiceType(req);
-
-		Method m = getServiceMethod(req, clazz);
-
-		Object serviceInstance = getServiceInstance(clazz);
-
-		return invoke(req, m, serviceInstance);
-	}
-
-
-	private Object invoke(BatchRequest req, Method m, Object serviceInstance) throws InvocationTargetException {
-		return locator.invoke(req, m, serviceInstance);
-	}
-
-
-	private Class<?> getServiceType(BatchRequest req) {
-		return locator.getServiceType(req);
-	}
-
-	private Method getServiceMethod(BatchRequest req, Class<?> serviceType) {
-		return locator.getServiceMethod(req, serviceType);
-	}
-
-	private Object getServiceInstance(Class<?> clazz) {
-		return locator.getServiceInstance(clazz);
-	}
-
-
 	//RemoteServiceServlet override to allow this servlet to handle all calls
 	public String processCall(String payload) throws SerializationException {
 		// First, check for possible XSRF situation
@@ -106,7 +51,7 @@ public class BatchServiceServlet extends RemoteServiceServlet implements Service
 			RPCRequest rpcRequest = BatchServiceServlet.decodeRequest(payload, null, this);
 			onAfterRequestDeserialized(rpcRequest);
 
-			return RPC.invokeAndEncodeResponse(this, rpcRequest.getMethod(),
+			return RPC.invokeAndEncodeResponse(delegate, rpcRequest.getMethod(),
 					rpcRequest.getParameters(), rpcRequest.getSerializationPolicy(),
 					rpcRequest.getFlags());
 		} catch (IncompatibleRemoteServiceException ex) {
