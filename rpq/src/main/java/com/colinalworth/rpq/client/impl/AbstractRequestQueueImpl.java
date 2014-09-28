@@ -13,7 +13,6 @@ import com.google.gwt.user.client.rpc.ServiceDefTarget;
 
 /**
  * Base impl which will be subclassed by a generated class. 
- * @author colin
  *
  */
 //TODO consider making this just a static instance in the RequestQueue impl to avoid colliding with service methods names
@@ -78,8 +77,8 @@ public abstract class AbstractRequestQueueImpl implements RequestQueue {
 	 * Adds a call to the queue. To be called by each generated method instead of an ajax call
 	 */
 	@SuppressWarnings("unchecked")
-	protected void addRequest(String service, String method, AsyncCallback<?> callback, Object... params) {
-		requests.add(new BatchRequest(service, method, params));
+	protected void addRequest(String service, String method, String[] types, AsyncCallback<?> callback, Object... params) {
+		requests.add(new BatchRequest(service, method, types, params));
 		callbacks.add((AsyncCallback<Object>) callback);
 	}
 

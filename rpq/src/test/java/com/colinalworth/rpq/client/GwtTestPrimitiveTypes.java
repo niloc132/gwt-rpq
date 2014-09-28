@@ -10,24 +10,24 @@ public class GwtTestPrimitiveTypes extends GWTTestCase {
 	public String getModuleName() {
 		return "com.colinalworth.rpq.RPQTest";
 	}
-	
+
 	public static class PrimitiveService {
 		public int add(int a, int b) {
 			return a + b;
 		}
-		
-		
+
+
 	}
 
 	public interface PrimitiveServiceAsync {
 		void add(int a, int b, AsyncCallback<Integer> callback);
 	}
-	
+
 	public interface PrimitiveRequestQueue extends RequestQueue {
 		@Service(PrimitiveService.class)
 		PrimitiveServiceAsync service();
 	}
-	
+
 	public void testAllPrimitives() {
 		PrimitiveRequestQueue q = GWT.create(PrimitiveRequestQueue.class);
 		PrimitiveServiceAsync service = q.service();
@@ -37,7 +37,7 @@ public class GwtTestPrimitiveTypes extends GWTTestCase {
 				assertEquals(3, result.intValue());
 				finishTest();
 			}
-			
+
 			@Override
 			public void onFailure(Throwable caught) {
 				caught.printStackTrace();

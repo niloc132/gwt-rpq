@@ -27,6 +27,8 @@ import com.google.gwt.editor.rebind.model.ModelUtils;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.rebind.ClassSourceFileComposerFactory;
 import com.google.gwt.user.rebind.SourceWriter;
+import com.google.gwt.user.rebind.rpc.SerializationUtils;
+
 
 public class RequestQueueGenerator extends Generator {
 
@@ -80,16 +82,20 @@ public class RequestQueueGenerator extends Generator {
 			for (AsyncServiceMethodModel method : service.getMethods()) {
 				sw.println("public void %1$s(", method.getMethodName());
 				StringBuilder argList = new StringBuilder();
+				StringBuilder types = new StringBuilder("new String[]{");
 				for (int i = 0; i < method.getArgTypes().size(); i++) {
 					if (i != 0) {
 						sw.print(", ");
 						argList.append(", ");
+						types.append(", ");
 					}
 					JType arg = method.getArgTypes().get(i);
 
 					sw.print("%1$s arg%2$d", arg.getParameterizedQualifiedSourceName(), i);
 					argList.append("arg").append(i);
+					types.append("\"").append(escape(SerializationUtils.getRpcTypeName(arg))).append("\"");
 				}
+				types.append("}");
 				if (method.hasCallback()) {
 					if (method.getArgTypes().size() != 0) {
 						sw.print(", ");
@@ -98,8 +104,11 @@ public class RequestQueueGenerator extends Generator {
 				}
 				sw.println(") {");
 				sw.indent();
-				
-				sw.println("addRequest(\"%1$s\", \"%2$s\",", escape(service.getServiceName()), escape(method.getMethodName()));
+
+				sw.println("addRequest(\"%1$s\", \"%2$s\",\n%3$s,\n",
+						escape(service.getServiceName()),
+						escape(method.getMethodName()),
+						types.toString());
 				if (method.hasCallback()) {
 					sw.indentln("callback,");
 				} else {

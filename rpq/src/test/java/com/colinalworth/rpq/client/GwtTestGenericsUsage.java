@@ -25,7 +25,7 @@ public class GwtTestGenericsUsage extends GWTTestCase {
 
 	//start simple, just List<StringWrapper> //not string, since we can probably already send string
 	public static class StringJoinService {
-		public String join(ArrayList<StringWrapper> list) {
+		public String join(List<StringWrapper> list) {
 			StringBuilder sb = new StringBuilder();
 			for (StringWrapper s : list) {
 				sb.append(s.string);
