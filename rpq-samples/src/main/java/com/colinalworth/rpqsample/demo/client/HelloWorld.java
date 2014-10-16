@@ -11,9 +11,9 @@ import com.google.gwt.i18n.shared.DateTimeFormat;
 import com.google.gwt.i18n.shared.DateTimeFormat.PredefinedFormat;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
+import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.HTMLPanel;
 import com.google.gwt.user.client.ui.RootPanel;
-import com.google.gwt.widget.client.TextButton;
 
 public class HelloWorld implements EntryPoint {
 
@@ -27,7 +27,7 @@ public class HelloWorld implements EntryPoint {
 		// Make a few buttons that do several things for us...
 		
 		// First, we'll make two ways for the page to queue up requests to send
-		TextButton hiButton = new TextButton("Say Hi");
+		Button hiButton = new Button("Say Hi");
 		hiButton.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent event) {
@@ -56,7 +56,7 @@ public class HelloWorld implements EntryPoint {
 			}
 		});
 
-		TextButton timeButton = new TextButton("Get Current Time");
+		Button timeButton = new Button("Get Current Time");
 		timeButton.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent event) {
@@ -77,7 +77,7 @@ public class HelloWorld implements EntryPoint {
 		
 		// Next, a button to artificially add processing time on the server via Thread.sleep. This
 		// allows us to demonstrate that multiple concurrent requests can be made and will work
-		TextButton delayButton = new TextButton("Add Extra Delay");
+		Button delayButton = new Button("Add Extra Delay");
 		delayButton.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent event) {
@@ -99,7 +99,7 @@ public class HelloWorld implements EntryPoint {
 		
 		// Finally, we'll add a way to actually fire these requests - the above buttons have no
 		// effect until this button is called!
-		TextButton fireButton = new TextButton("Fire Request");
+		Button fireButton = new Button("Fire Request");
 		fireButton.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent event) {

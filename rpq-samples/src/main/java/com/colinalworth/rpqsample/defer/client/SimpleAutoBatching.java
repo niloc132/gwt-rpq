@@ -7,8 +7,8 @@ import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
+import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.RootPanel;
-import com.google.gwt.widget.client.TextButton;
 import com.google.web.bindery.event.shared.EventBus;
 import com.google.web.bindery.event.shared.SimpleEventBus;
 
@@ -32,7 +32,7 @@ public class SimpleAutoBatching implements EntryPoint {
 		// as a result multiple client widgets/presenters could attempt to make calls to
 		// the server, which are now automatically grouped together.
 
-		TextButton action = new TextButton("Action");
+		Button action = new Button("Action");
 		action.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent event) {
